@@ -24,6 +24,8 @@ return new class extends Migration
             $table->decimal("sugars",5,2)->nullable();
             $table->decimal("fiber",5,2)->nullable();
             $table->decimal("proteins",5,2)->nullable();
+            $table->unsignedBigInteger('category_id');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'category_id',
         'name',
         'calories',
         'total_fat',
@@ -18,7 +17,8 @@ class Product extends Model
         'carbohydrates',
         'sugars',
         'fiber',
-        'proteins'
+        'proteins',
+        'category_id'
     ];
 
     public function category()
