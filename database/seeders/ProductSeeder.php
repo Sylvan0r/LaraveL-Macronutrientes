@@ -18,7 +18,12 @@ class ProductSeeder extends Seeder
 
             foreach ($foods as $food) {
                 $detail = $client->getFood($food->f_id)->food ?? $food;
+
+                // Normalizar foodvalue a array
                 $nutrients = $detail->foodvalue ?? [];
+                if ($nutrients instanceof \stdClass) {
+                    $nutrients = array_values(get_object_vars($nutrients));
+                }
 
                 $parsed = $this->parseNutrients($nutrients);
 
@@ -42,34 +47,43 @@ class ProductSeeder extends Seeder
         }
     }
 
-private function parseNutrients(array $nutrients)
-{
-    $map = [
-        '409' => 'calories',
-        '410' => 'total_fat',
-        '299' => 'saturated_fat',
-        '433' => 'colesterol',
-        '287' => 'polyunsaturated_fat',
-        '282' => 'monounsaturated_fat',
-        '53'  => 'carbohydrates',
-        '307' => 'fiber',
-        '416' => 'proteins'
-    ];
+    /**
+     * Parsear nutrientes del foodvalue de BEDCA
+     */
+    private function parseNutrients($nutrients)
+    {
+        // Normalizar si es stdClass
+        if ($nutrients instanceof \stdClass) {
+            $nutrients = array_values(get_object_vars($nutrients));
+        } elseif (!is_array($nutrients)) {
+            return [];
+        }
 
-    $result = [];
-    foreach ($nutrients as $n) {
-        $id = $n->c_id ?? null;
-        $val = $n->best_location ?? null;
+        $map = [
+            '409' => 'calories',
+            '410' => 'total_fat',
+            '299' => 'saturated_fat',
+            '433' => 'colesterol',
+            '287' => 'polyunsaturated_fat',
+            '282' => 'monounsaturated_fat',
+            '53'  => 'carbohydrates',
+            '307' => 'fiber',
+            '416' => 'proteins'
+        ];
 
-        if (!$id || !isset($map[$id])) continue;
+        $result = [];
+        foreach ($nutrients as $n) {
+            $id = $n->c_id ?? null;
+            $val = $n->best_location ?? null;
 
-        // Evitar objetos o valores no numéricos
-        if (!is_numeric($val)) continue;
+            if (!$id || !isset($map[$id])) continue;
 
-        $result[$map[$id]] = (float)$val;
+            // Ignorar valores no numéricos u objetos
+            if (!is_numeric($val)) continue;
+
+            $result[$map[$id]] = (float)$val;
+        }
+
+        return $result;
     }
-
-    return $result;
-}
-
 }

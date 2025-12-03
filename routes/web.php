@@ -2,9 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
-
-Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
 
 Route::get('/', function () {
     return view('welcome');
