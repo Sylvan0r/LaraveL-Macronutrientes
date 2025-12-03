@@ -2,23 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'calories',
         'total_fat',
         'saturated_fat',
-        'trans_fat',
+        'colesterol',
         'polyunsaturated_fat',
         'monounsaturated_fat',
         'carbohydrates',
-        'sugars',
         'fiber',
         'proteins',
-        'category_id'
+        'category_id',
+        'external_id'
     ];
 
     public function category()

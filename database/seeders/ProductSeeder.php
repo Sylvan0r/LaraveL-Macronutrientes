@@ -3,123 +3,73 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use StaticKidz\BedcaAPI\BedcaClient;
 use App\Models\Product;
+use StaticKidz\BedcaAPI\BedcaClient;
 
 class ProductSeeder extends Seeder
 {
     public function run()
     {
         $client = new BedcaClient();
-
-        // Obtener grupos
         $groups = $client->getFoodGroups()->food ?? [];
 
         foreach ($groups as $group) {
-
-            // Obtener alimentos del grupo
             $foods = $client->getFoodsInGroup($group->fg_id)->food ?? [];
 
             foreach ($foods as $food) {
+                $detail = $client->getFood($food->f_id)->food ?? $food;
+                $nutrients = $detail->foodvalue ?? [];
 
-                // Obtener detalle completo
-                $data = $client->getFood($food->f_id);
-
-                // Normalizar el nodo "food"
-                $detail = $data->food ?? $data;
-
-                // OBTENER NUTRIENTES DERECHO
-                $nutrients = $this->getNutrientList($detail);
-
-                // Convertir a nutriente:valor
                 $parsed = $this->parseNutrients($nutrients);
 
-                // GUARDADO
                 Product::updateOrCreate(
-                    ['id' => (int) $food->f_id],
+                    ['external_id' => $food->f_id],
                     [
-                        'name'                   => $detail->f_ori_name ?? 'Desconocido',
-                        'calories'               => $parsed['energy'] ?? null,
-                        'total_fat'              => $parsed['fat'] ?? null,
-                        'saturated_fat'          => $parsed['saturated_fat'] ?? null,
-                        'trans_fat'              => $parsed['trans_fat'] ?? null,
-                        'polyunsaturated_fat'    => $parsed['poly_fat'] ?? null,
-                        'monounsaturated_fat'    => $parsed['mono_fat'] ?? null,
-                        'carbohydrates'          => $parsed['carbs'] ?? null,
-                        'sugars'                 => $parsed['sugars'] ?? null,
-                        'fiber'                  => $parsed['fiber'] ?? null,
-                        'proteins'               => $parsed['protein'] ?? null,
-                        'category_id'            => (int) $group->fg_id,
+                        'name'        => $food->f_ori_name,
+                        'category_id' => $group->fg_id,
+                        'calories'            => $parsed['calories'] ?? null,
+                        'total_fat'           => $parsed['total_fat'] ?? null,
+                        'saturated_fat'       => $parsed['saturated_fat'] ?? null,
+                        'colesterol'           => $parsed['colesterol'] ?? null,
+                        'polyunsaturated_fat' => $parsed['polyunsaturated_fat'] ?? null,
+                        'monounsaturated_fat' => $parsed['monounsaturated_fat'] ?? null,
+                        'carbohydrates'       => $parsed['carbohydrates'] ?? null,
+                        'fiber'               => $parsed['fiber'] ?? null,
+                        'proteins'            => $parsed['proteins'] ?? null,
                     ]
                 );
             }
         }
     }
 
+private function parseNutrients(array $nutrients)
+{
+    $map = [
+        '409' => 'calories',
+        '410' => 'total_fat',
+        '299' => 'saturated_fat',
+        '433' => 'colesterol',
+        '287' => 'polyunsaturated_fat',
+        '282' => 'monounsaturated_fat',
+        '53'  => 'carbohydrates',
+        '307' => 'fiber',
+        '416' => 'proteins'
+    ];
 
-    /**
-     * Localiza la lista de nutrientes en todas las posibles estructuras de BEDCA.
-     */
-    private function getNutrientList($detail)
-    {
-        // OPCIÓN 1 → food->nutrients->nutrient
-        if (isset($detail->nutrients->nutrient)) {
-            return $detail->nutrients->nutrient;
-        }
+    $result = [];
+    foreach ($nutrients as $n) {
+        $id = $n->c_id ?? null;
+        $val = $n->best_location ?? null;
 
-        if (isset($detail->food->nutrients->nutrient)) {
-            return $detail->food->nutrients->nutrient;
-        }
+        if (!$id || !isset($map[$id])) continue;
 
-        // OPCIÓN 2 → food->items->item[n]->nutrients->nutrient
-        if (isset($detail->food->items->item[0]->nutrients->nutrient)) {
-            return $detail->food->items->item[0]->nutrients->nutrient;
-        }
+        // Evitar objetos o valores no numéricos
+        if (!is_numeric($val)) continue;
 
-        // OPCIÓN 3 → nutrients a nivel root
-        if (isset($detail->nutrient)) {
-            return $detail->nutrient;
-        }
-
-        return []; // ningún nutriente encontrado
+        $result[$map[$id]] = (float)$val;
     }
 
+    return $result;
+}
 
-    /**
-     * Mapea códigos BEDCA → valores
-     */
-    private function parseNutrients($nutrients)
-    {
-        $map = [
-            '208' => 'energy',
-            '204' => 'fat',
-            '606' => 'saturated_fat',
-            '605' => 'trans_fat',
-            '646' => 'poly_fat',
-            '645' => 'mono_fat',
-            '205' => 'carbs',
-            '269' => 'sugars',
-            '291' => 'fiber',
-            '203' => 'protein',
-        ];
-
-        $result = [];
-
-        foreach ($nutrients as $n) {
-            $id  = $n->nutrient_id ?? null;
-            $val = $n->nutrient_value ?? null;
-
-            if (!$id || !isset($map[$id])) {
-                continue;
-            }
-
-            if (is_numeric($val)) {
-                $val = (float) $val;
-            }
-
-            $result[$map[$id]] = $val;
-        }
-
-        return $result;
-    }
 }
