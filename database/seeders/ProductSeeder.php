@@ -35,6 +35,7 @@ class ProductSeeder extends Seeder
                         'calories'            => $parsed['calories'] ?? null,
                         'total_fat'           => $parsed['total_fat'] ?? null,
                         'saturated_fat'       => $parsed['saturated_fat'] ?? null,
+                        'trans_fat'           => $parsed['trans_fat'] ?? null,
                         'colesterol'           => $parsed['colesterol'] ?? null,
                         'polyunsaturated_fat' => $parsed['polyunsaturated_fat'] ?? null,
                         'monounsaturated_fat' => $parsed['monounsaturated_fat'] ?? null,
@@ -63,6 +64,7 @@ class ProductSeeder extends Seeder
             '409' => 'calories',
             '410' => 'total_fat',
             '299' => 'saturated_fat',
+            '302' => 'trans_fat',        // <--- actualizado
             '433' => 'colesterol',
             '287' => 'polyunsaturated_fat',
             '282' => 'monounsaturated_fat',

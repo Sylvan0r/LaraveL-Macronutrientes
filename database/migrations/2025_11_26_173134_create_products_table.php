@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('calories')->nullable();
             $table->decimal('total_fat',7,2)->nullable();
             $table->decimal('saturated_fat',7,2)->nullable();
+            $table->decimal('trans_fat',7,2)->nullable();
             $table->decimal('colesterol',7,2)->nullable();
             $table->decimal('polyunsaturated_fat',7,2)->nullable();
             $table->decimal('monounsaturated_fat',7,2)->nullable();
