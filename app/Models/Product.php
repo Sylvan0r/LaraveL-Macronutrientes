@@ -21,7 +21,8 @@ class Product extends Model
         'fiber',
         'proteins',
         'category_id',
-        'external_id'
+        'external_id',
+        'id_user'
     ];
 
     public function category()
