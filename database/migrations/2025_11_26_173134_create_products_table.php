@@ -24,8 +24,11 @@ return new class extends Migration
             $table->decimal('fiber',7,2)->nullable();
             $table->decimal('proteins',7,2)->nullable();
 
+            // Relación con usuario
+            $table->unsignedBigInteger('id_user')->nullable();
+            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
 
-            // Relación con categoría
+            // Relación con categoría            
             $table->unsignedBigInteger('category_id');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
 
