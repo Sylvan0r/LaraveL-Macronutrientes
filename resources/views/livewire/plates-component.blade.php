@@ -59,27 +59,4 @@
             </div>
         </div>
     @endif
-
-    {{-- Lista de platos --}}
-    <div class="overflow-y-auto max-h-80 border rounded-lg">
-        <ul class="divide-y divide-gray-200">
-            @foreach($platos as $plato)
-                <li class="flex flex-col md:flex-row justify-between items-start md:items-center px-4 py-3 hover:bg-gray-50">
-                    <div>
-                        <p class="font-medium text-gray-700">{{ $plato->name }}</p>
-                        <p class="text-gray-500 text-sm">
-                            @foreach($plato->products as $prod)
-                                {{ $prod->name }} ({{ $prod->category->name ?? 'Sin categoría' }}) - {{ $prod->pivot->quantity }} g
-                                @if(!$loop->last), @endif
-                            @endforeach
-                        </p>
-                    </div>
-                    <button wire:click="deletePlato({{ $plato->id }})"
-                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow text-sm mt-2 md:mt-0">
-                        Eliminar
-                    </button>
-                </li>
-            @endforeach
-        </ul>
-    </div>
 </div>
