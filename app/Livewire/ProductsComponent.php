@@ -105,9 +105,9 @@ class ProductsComponent extends Component
             'id_user' => $userId, // <-- aquí aseguramos el id del usuario
         ]);
 
-        // Recargar lista y cerrar overlay
-        $this->loadProducts();
+        // Recargar lista y cerrar overlay        
         $this->closeCreate();
+        $this->loadProducts();
 
         session()->flash('success', 'Producto creado correctamente.');
     }

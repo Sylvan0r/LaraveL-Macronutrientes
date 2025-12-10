@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('platos', function (Blueprint $table) {
             $table->id();
-            $table->string('descripcion');
+            $table->string('name');
+            $table->string('descripcion')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // usuario que creó el plato
             $table->timestamps();
         });

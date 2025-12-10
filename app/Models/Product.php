@@ -29,4 +29,11 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function platos()
+    {
+        return $this->belongsToMany(Plato::class, 'plato_product')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
+    }
 }

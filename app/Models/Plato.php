@@ -10,6 +10,7 @@ class Plato extends Model
     use HasFactory;
 
     protected $fillable = [
+        'name',
         'descripcion',
         'user_id'
     ];
@@ -26,11 +27,11 @@ class Plato extends Model
         return $this->hasMany(Content::class);
     }
 
-    // Relación directa a productos a través de contents
+    // app/Models/Plato.php
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'contents')
-                    ->withPivot('cantidad')
+        return $this->belongsToMany(Product::class, 'plato_product')
+                    ->withPivot('quantity')
                     ->withTimestamps();
     }
 }
