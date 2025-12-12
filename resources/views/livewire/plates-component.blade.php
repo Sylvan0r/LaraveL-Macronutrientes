@@ -36,16 +36,44 @@
                     {{-- Seleccionar productos --}}
                     <div>
                         <label class="block text-sm mb-1">Selecciona Productos y Cantidad *</label>
-                        <div class="space-y-2 max-h-64 overflow-y-auto border rounded p-2">
-                            @foreach($products as $product)
-                                <div class="flex items-center justify-between gap-2">
-                                    <label class="flex-1">
-                                        <input type="checkbox" wire:model="selectedProducts" value="{{ $product->id }}">
-                                        {{ $product->name }} ({{ $product->category->name ?? 'Sin categoría' }})
-                                    </label>
-                                    <input type="number" wire:model.defer="quantities.{{ $product->id }}" min="0" class="w-20 border rounded p-1">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            {{-- Productos públicos --}}
+                            <div>
+                                <h5 class="font-semibold text-gray-700 mb-1">Productos Públicos</h5>
+                                <div class="max-h-64 overflow-y-auto border rounded p-2">
+                                    <ul class="space-y-1">
+                                        @foreach($publicProducts as $product)
+                                            <li class="flex items-center justify-between gap-2">
+                                                <label class="flex-1">
+                                                    <input type="checkbox" wire:model="selectedProducts" value="{{ $product->id }}">
+                                                    {{ $product->name }} ({{ $product->category->name ?? 'Sin categoría' }})
+                                                </label>
+                                                <input type="number" wire:model.defer="quantities.{{ $product->id }}" min="0" class="w-20 border rounded p-1">
+                                            </li>
+                                        @endforeach
+                                    </ul>
                                 </div>
-                            @endforeach
+                            </div>
+
+                            {{-- Productos del usuario --}}
+                            <div>
+                                <h5 class="font-semibold text-gray-700 mb-1">Tus Productos</h5>
+                                <div class="max-h-64 overflow-y-auto border rounded p-2">
+                                    <ul class="space-y-1">
+                                        @foreach($userProducts as $product)
+                                            <li class="flex items-center justify-between gap-2">
+                                                <label class="flex-1">
+                                                    <input type="checkbox" wire:model="selectedProducts" value="{{ $product->id }}">
+                                                    {{ $product->name }} ({{ $product->category->name ?? 'Sin categoría' }})
+                                                </label>
+                                                <input type="number" wire:model.defer="quantities.{{ $product->id }}" min="0" class="w-20 border rounded p-1">
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+
                         </div>
                         @error('selectedProducts') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                         @error('quantities') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror

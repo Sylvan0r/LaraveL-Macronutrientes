@@ -18,8 +18,9 @@ class PlatesComponent extends Component
     public $selectedProducts = []; // id de productos
     public $quantities = [];       // cantidad de cada producto
 
-    // Lista de productos públicos o del usuario
-    public $products = [];
+    // Listas separadas de productos
+    public $publicProducts = [];
+    public $userProducts = [];
 
     public function mount()
     {
@@ -28,10 +29,13 @@ class PlatesComponent extends Component
 
     public function loadProducts()
     {
-        $this->products = Product::whereNull('id_user')
-                            ->orWhere('id_user', Auth::id())
-                            ->orderBy('name')
-                            ->get();
+        $this->publicProducts = Product::whereNull('id_user')
+            ->orderBy('name')
+            ->get();
+
+        $this->userProducts = Product::where('id_user', Auth::id())
+            ->orderBy('name')
+            ->get();
     }
 
     public function openCreate()
@@ -64,19 +68,12 @@ class PlatesComponent extends Component
 
     public function createPlato()
     {
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'selectedProducts' => 'required|array',
-            'quantities' => 'required|array',
-        ]);
-
-        $userId = auth()->id();
+        $this->validate();
 
         $plato = Plato::create([
             'name' => $this->name,
             'descripcion' => $this->descripcion,
-            'user_id' => $userId,
+            'user_id' => Auth::id(),
         ]);
 
         // Guardar productos con cantidad en la tabla pivote
@@ -88,8 +85,8 @@ class PlatesComponent extends Component
 
         session()->flash('success', 'Plato creado correctamente.');
 
-        // Resetear campos
-        $this->reset(['name', 'descripcion', 'selectedProducts', 'quantities']);
+        // Resetear campos y cerrar overlay
+        $this->closeCreate();
     }
 
     public function deletePlato($id)
@@ -103,8 +100,10 @@ class PlatesComponent extends Component
 
     public function render()
     {
-        // Cargar platos del usuario
-        $platos = Plato::with('products')->where('user_id', Auth::id())->get();
+        // Cargar platos del usuario para la lista lateral
+        $platos = Plato::with('products.category')
+            ->where('user_id', Auth::id())
+            ->get();
 
         return view('livewire.plates-component', compact('platos'));
     }
