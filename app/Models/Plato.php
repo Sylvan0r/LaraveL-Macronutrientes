@@ -34,4 +34,9 @@ class Plato extends Model
                     ->withPivot('quantity')
                     ->withTimestamps();
     }
+
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'menu_plato')->withPivot('quantity')->withTimestamps();
+    }
 }

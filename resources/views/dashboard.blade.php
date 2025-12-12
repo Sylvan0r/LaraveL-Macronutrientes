@@ -119,49 +119,48 @@
                 {{-- Panel Agregar Menú --}}
                 <div class="bg-white shadow-lg rounded-xl p-6 flex flex-col justify-between">
                     <h3 class="text-xl font-bold mb-4 text-gray-700">Crear Menú</h3>
+
                     <p class="text-gray-500 mb-4">
-                        ¡Crea un menú a partir de tus platos creados!
+                        ¡Crea un menú usando tus platos creados!
                     </p>
+
                     <div class="mt-auto">
-                        @livewire('plates-component')
+                        @livewire('menus-component')
                     </div>
                 </div>
 
-               {{-- Lista de platos --}}
-                <div class="lg:col-span-2 bg-white shadow-lg rounded-xl p-6 flex flex-col">
-                    <h3 class="text-xl font-bold mb-4 text-gray-700">Tus Menus</h3>
+                @php
+                    $userMenus = \App\Models\Menu::where('user_id', auth()->id())
+                                    ->with(['platos.products'])->get();
+                    $useScroll = $userMenus->count() > 3;
+                @endphp
 
-                    @php
-                        $userPlates = \App\Models\Plato::where('user_id', auth()->id())->with('products.category')->get();
-                        $useScroll = $userPlates->count() > 3;
-                    @endphp
+                <div class="lg:col-span-2 bg-white shadow-lg rounded-xl p-6 flex flex-col">
+                    <h3 class="text-xl font-bold mb-4 text-gray-700">Tus Menús</h3>
 
                     <div class="{{ $useScroll ? 'overflow-y-auto max-h-80' : '' }} border rounded-lg">
                         <ul class="divide-y divide-gray-200">
-                            @foreach($userPlates as $plato)
+                            @foreach($userMenus as $menu)
                                 <li class="flex flex-col md:flex-row justify-between items-start md:items-center px-4 py-3 hover:bg-gray-50">
                                     <div class="flex-1">
-                                        {{-- Nombre del plato --}}
-                                        <p class="font-semibold text-gray-800">{{ $plato->name }}</p>
-                                        
-                                        {{-- Descripción --}}
-                                        @if($plato->descripcion)
-                                            <p class="text-gray-600 text-sm mb-1">{{ $plato->descripcion }}</p>
-                                        @endif
-                                        
-                                        {{-- Productos del plato --}}
-                                        @if($plato->products->count())
-                                            <p class="text-gray-500 text-sm">
-                                                @foreach($plato->products as $prod)
-                                                    {{ $prod->name }} ({{ $prod->category->name ?? 'Sin categoría' }}) - {{ $prod->pivot->quantity }}
-                                                    @if(!$loop->last), @endif
-                                                @endforeach
-                                            </p>
-                                        @endif
+                                        <p class="font-semibold text-gray-800">{{ $menu->name }}</p>
+
+                                        <p class="text-gray-600 text-sm mb-2">
+                                            <strong>Calorías:</strong> {{ $menu->total_calories ?? 0 }} kcal |
+                                            <strong>Proteínas:</strong> {{ $menu->total_proteins ?? 0 }} g |
+                                            <strong>Carbs:</strong> {{ $menu->total_carbohydrates ?? 0 }} g |
+                                            <strong>Grasas:</strong> {{ $menu->total_total_fat ?? 0 }} g
+                                        </p>
+
+                                        <p class="text-gray-500 text-sm">
+                                            @foreach($menu->platos as $plato)
+                                                • {{ $plato->name }} (x{{ $plato->pivot->quantity }})
+                                                @if(!$loop->last)<br>@endif
+                                            @endforeach
+                                        </p>
                                     </div>
 
-                                    {{-- Botón eliminar --}}
-                                    <button wire:click="deletePlato({{ $plato->id }})"
+                                    <button wire:click="$dispatch('deleteMenu', {{ $menu->id }})"
                                             class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow text-sm mt-2 md:mt-0">
                                         Eliminar
                                     </button>
