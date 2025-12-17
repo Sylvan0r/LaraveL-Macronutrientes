@@ -1,90 +1,122 @@
-<div>
-    {{-- Botón Crear Plato --}}
-    <button wire:click="openCreate" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow mb-4">
-        Crear Plato
-    </button>
-
-    {{-- Overlay --}}
-    @if($showCreate)
-        <div class="fixed inset-0 z-40 flex items-start justify-center pt-20">
-            <div class="absolute inset-0 bg-black opacity-40" wire:click="closeCreate"></div>
-            <div class="bg-white rounded-lg shadow-xl z-50 w-11/12 md:w-3/4 lg:w-1/2 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="font-semibold text-lg">Crear Plato</h4>
-                    <button wire:click="closeCreate" class="text-gray-600 hover:text-gray-800">Cerrar ✕</button>
-                </div>
-
-                @if(session()->has('success'))
-                    <div class="mb-2 text-green-600">{{ session('success') }}</div>
-                @endif
-
-                <form wire:submit.prevent="createPlato" class="space-y-4">
-                    {{-- Nombre --}}
-                    <div>
-                        <label class="block text-sm">Nombre *</label>
-                        <input wire:model.defer="name" type="text" class="border rounded w-full p-2" required>
-                        @error('name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-
-                    {{-- Descripción --}}
-                    <div>
-                        <label class="block text-sm">Descripción</label>
-                        <textarea wire:model.defer="descripcion" class="border rounded w-full p-2" rows="3"></textarea>
-                        @error('descripcion') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-
-                    {{-- Seleccionar productos --}}
-                    <div>
-                        <label class="block text-sm mb-1">Selecciona Productos y Cantidad *</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                            {{-- Productos públicos --}}
-                            <div>
-                                <h5 class="font-semibold text-gray-700 mb-1">Productos Públicos</h5>
-                                <div class="max-h-64 overflow-y-auto border rounded p-2">
-                                    <ul class="space-y-1">
-                                        @foreach($publicProducts as $product)
-                                            <li class="flex items-center justify-between gap-2">
-                                                <label class="flex-1">
-                                                    <input type="checkbox" wire:model="selectedProducts" value="{{ $product->id }}">
-                                                    {{ $product->name }} ({{ $product->category->name ?? 'Sin categoría' }})
-                                                </label>
-                                                <input type="number" wire:model.defer="quantities.{{ $product->id }}" min="0" class="w-20 border rounded p-1">
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </div>
-
-                            {{-- Productos del usuario --}}
-                            <div>
-                                <h5 class="font-semibold text-gray-700 mb-1">Tus Productos</h5>
-                                <div class="max-h-64 overflow-y-auto border rounded p-2">
-                                    <ul class="space-y-1">
-                                        @foreach($userProducts as $product)
-                                            <li class="flex items-center justify-between gap-2">
-                                                <label class="flex-1">
-                                                    <input type="checkbox" wire:model="selectedProducts" value="{{ $product->id }}">
-                                                    {{ $product->name }} ({{ $product->category->name ?? 'Sin categoría' }})
-                                                </label>
-                                                <input type="number" wire:model.defer="quantities.{{ $product->id }}" min="0" class="w-20 border rounded p-1">
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </div>
-
-                        </div>
-                        @error('selectedProducts') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                        @error('quantities') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="flex justify-end space-x-2 mt-4">
-                        <button type="button" wire:click="closeCreate" class="px-4 py-2 rounded border">Cancelar</button>
-                        <button type="submit" class="px-4 py-2 rounded bg-green-600 text-white">Guardar</button>
-                    </div>
-                </form>
-            </div>
+<div class="flex flex-col lg:flex-row gap-6">
+    <!-- Botón + Texto (30%) -->
+    <div class="lg:w-1/3 bg-gray-800 rounded-lg border border-gray-700 p-4 flex flex-col justify-between">
+        <div class="mb-4 text-gray-300">
+            <h2 class="text-yellow-400 text-3xl">Platos</h2>
+            <p>Añade nuevos platos usando productos públicos o tus productos personales.</p>
         </div>
-    @endif
+        <button wire:click="openCreate" class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded shadow w-full">
+            Crear Plato
+        </button>
+
+        @if($showCreate)
+            <div class="fixed inset-0 z-40 flex items-start justify-center pt-20">
+                <div class="absolute inset-0 bg-black/70" wire:click="closeCreate"></div>
+
+                <div class="bg-gray-900 text-gray-100 rounded-xl shadow-xl z-50 w-11/12 md:w-3/4 lg:w-1/2 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="font-semibold text-lg text-yellow-400">Crear Plato</h4>
+                        <button wire:click="closeCreate" class="text-gray-400 hover:text-gray-200">✕</button>
+                    </div>
+
+                    @if(session()->has('success'))
+                        <div class="mb-3 text-green-400 text-sm">{{ session('success') }}</div>
+                    @endif
+
+                    <form wire:submit.prevent="createPlato" class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-1">Nombre *</label>
+                            <input wire:model.defer="name" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-gray-100" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1">Descripción</label>
+                            <textarea wire:model.defer="descripcion" rows="3"
+                                      class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-gray-100"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-2">Productos *</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Productos públicos -->
+                                <div>
+                                    <h5 class="font-semibold mb-1 text-yellow-400">Productos públicos</h5>
+                                    <div class="max-h-56 overflow-y-auto border border-gray-700 rounded p-2 space-y-1">
+                                        @foreach($publicProducts as $product)
+                                            <div class="flex justify-between gap-2">
+                                                <label class="flex-1">
+                                                    <input type="checkbox" wire:model="selectedProducts" value="{{ $product->id }}">
+                                                    {{ $product->name }}
+                                                </label>
+                                                <input type="number" min="0" wire:model.defer="quantities.{{ $product->id }}"
+                                                       class="w-16 bg-gray-800 border border-gray-700 rounded p-1 text-gray-100">
+                                            </div>
+                                        @endforeach
+                                        @if($publicProducts->count() === 0)
+                                            <p class="text-gray-400 text-sm">No hay productos públicos disponibles.</p>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Productos del usuario -->
+                                <div>
+                                    <h5 class="font-semibold mb-1 text-yellow-400">Tus productos</h5>
+                                    <div class="max-h-56 overflow-y-auto border border-gray-700 rounded p-2 space-y-1">
+                                        @foreach($userProducts as $product)
+                                            <div class="flex justify-between gap-2">
+                                                <label class="flex-1">
+                                                    <input type="checkbox" wire:model="selectedProducts" value="{{ $product->id }}">
+                                                    {{ $product->name }}
+                                                </label>
+                                                <input type="number" min="0" wire:model.defer="quantities.{{ $product->id }}"
+                                                       class="w-16 bg-gray-800 border border-gray-700 rounded p-1 text-gray-100">
+                                            </div>
+                                        @endforeach
+                                        @if($userProducts->count() === 0)
+                                            <p class="text-gray-400 text-sm">No tienes productos disponibles.</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-2">
+                            <button type="button" wire:click="closeCreate" class="px-4 py-2 border border-gray-700 rounded text-white hover:text-white">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+    </div>
+
+    <!-- Lista de Platos del Usuario (70%) -->
+    <div class="lg:w-2/3 bg-gray-800 rounded-lg border border-gray-700 p-4 overflow-y-auto max-h-96">
+        <h2 class="text-yellow-400 text-3xl">Platos personales</h2>
+        @if($userPlates->count() === 0)
+            <p class="text-gray-400">No tienes platos creados.</p>
+        @else
+            <ul class="divide-y divide-gray-700">
+                @foreach($userPlates as $plato)
+                    <li class="flex justify-between items-start md:items-center px-4 py-2 hover:bg-gray-700">
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-200">{{ $plato->name }}</p>
+                            @if($plato->descripcion)
+                                <p class="text-gray-400 text-sm">{{ $plato->descripcion }}</p>
+                            @endif
+                            @if($plato->products->count())
+                                <p class="text-gray-400 text-sm">
+                                    @foreach($plato->products as $prod)
+                                        {{ $prod->name }} ({{ $prod->category->name ?? 'Sin categoría' }}) - {{ $prod->pivot->quantity }}
+                                        @if(!$loop->last), @endif
+                                    @endforeach
+                                </p>
+                            @endif
+                        </div>
+                        <button wire:click="deletePlate({{ $plato->id }})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow text-sm mt-2 md:mt-0">Eliminar</button>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
 </div>

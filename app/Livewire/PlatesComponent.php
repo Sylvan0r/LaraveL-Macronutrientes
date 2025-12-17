@@ -3,25 +3,22 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Plato;
 use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 
 class PlatesComponent extends Component
 {
     public $showCreate = false;
-
     public $name;
     public $descripcion;
+    public $selectedProducts = [];
+    public $quantities = [];
 
-    // Array de productos seleccionados
-    public $selectedProducts = []; // id de productos
-    public $quantities = [];       // cantidad de cada producto
-
-    // Listas separadas de productos
-    public $publicProducts = [];
     public $userProducts = [];
+    public $publicProducts = [];
 
+    protected $listeners = ['deletePlate'];
     public function mount()
     {
         $this->loadProducts();
@@ -29,13 +26,8 @@ class PlatesComponent extends Component
 
     public function loadProducts()
     {
-        $this->publicProducts = Product::whereNull('id_user')
-            ->orderBy('name')
-            ->get();
-
-        $this->userProducts = Product::where('id_user', Auth::id())
-            ->orderBy('name')
-            ->get();
+        $this->userProducts = Product::where('id_user', Auth::id())->get();
+        $this->publicProducts = Product::whereNull('id_user')->get(); // << productos públicos
     }
 
     public function openCreate()
@@ -49,20 +41,12 @@ class PlatesComponent extends Component
         $this->resetFields();
     }
 
-    public function resetFields()
-    {
-        $this->reset(['name', 'descripcion', 'selectedProducts', 'quantities']);
-    }
-
     protected function rules()
     {
         return [
             'name' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
             'selectedProducts' => 'required|array|min:1',
-            'selectedProducts.*' => 'exists:products,id',
             'quantities' => 'required|array',
-            'quantities.*' => 'numeric|min:0',
         ];
     }
 
@@ -76,35 +60,37 @@ class PlatesComponent extends Component
             'user_id' => Auth::id(),
         ]);
 
-        // Guardar productos con cantidad en la tabla pivote
         foreach ($this->selectedProducts as $productId) {
-            $plato->products()->attach($productId, [
-                'quantity' => $this->quantities[$productId] ?? 1
-            ]);
+            $plato->products()->attach($productId, ['quantity' => $this->quantities[$productId] ?? 1]);
         }
 
-        session()->flash('success', 'Plato creado correctamente.');
-
-        // Resetear campos y cerrar overlay
         $this->closeCreate();
+        $this->loadProducts();
+        session()->flash('success', 'Plato creado correctamente.');
     }
 
-    public function deletePlato($id)
+    public function deletePlate($platoId)
     {
-        $plato = Plato::where('user_id', Auth::id())->find($id);
+        $plato = Plato::where('id', $platoId)->where('user_id', Auth::id())->first();
         if ($plato) {
+            $plato->products()->detach();
             $plato->delete();
-            session()->flash('success', 'Plato eliminado.');
+            session()->flash('success', 'Plato eliminado correctamente.');
+            $this->loadProducts();
         }
+    }
+
+    public function resetFields()
+    {
+        $this->reset(['name', 'descripcion', 'selectedProducts', 'quantities']);
     }
 
     public function render()
     {
-        // Cargar platos del usuario para la lista lateral
-        $platos = Plato::with('products.category')
-            ->where('user_id', Auth::id())
-            ->get();
+        $userPlates = Plato::where('user_id', Auth::id())->with('products')->get();
 
-        return view('livewire.plates-component', compact('platos'));
+        return view('livewire.plates-component', [
+            'userPlates' => $userPlates,
+        ]);
     }
 }

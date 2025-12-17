@@ -9,13 +9,8 @@ use App\Models\Category;
 
 class ProductsComponent extends Component
 {
-    // Lista de productos para el select (si quieres)
-    public $products = [];
-
-    // Crear (overlay)
     public $showCreate = false;
 
-    // Campos del formulario
     public $name;
     public $calories;
     public $total_fat;
@@ -30,22 +25,22 @@ class ProductsComponent extends Component
     public $category_id;
     public $external_id;
 
-    // Categories para el select
     public $categories = [];
+    public $userProducts = [];
+
+    protected $listeners = ['deleteProduct'];
 
     public function mount()
     {
-        $this->loadProducts();
+        $this->loadUserProducts();
         $this->categories = Category::orderBy('name')->get();
     }
 
-    public function loadProducts()
+    public function loadUserProducts()
     {
-        // Si quieres cargar todos los productos (p. ej. para el select ya existente)
-        $this->products = Product::orderBy('name')->get();
+        $this->userProducts = Product::where('id_user', Auth::id())->get();
     }
 
-    // Abrir / cerrar overlay
     public function openCreate()
     {
         $this->showCreate = true;
@@ -80,15 +75,7 @@ class ProductsComponent extends Component
     {
         $this->validate();
 
-        // Asegurarse de que hay un usuario autenticado
-        $userId = Auth::id();
-        if (!$userId) {
-            session()->flash('error', 'No hay usuario autenticado.');
-            return;
-        }
-
-        // Crear producto e inyectar id_user explícitamente
-        $product = Product::create([
+        Product::create([
             'name' => $this->name,
             'calories' => $this->calories,
             'total_fat' => $this->total_fat,
@@ -102,22 +89,31 @@ class ProductsComponent extends Component
             'proteins' => $this->proteins,
             'category_id' => $this->category_id,
             'external_id' => $this->external_id,
-            'id_user' => $userId, // <-- aquí aseguramos el id del usuario
+            'id_user' => Auth::id(),
         ]);
 
-        // Recargar lista y cerrar overlay        
         $this->closeCreate();
-        $this->loadProducts();
+        $this->loadUserProducts();
 
         session()->flash('success', 'Producto creado correctamente.');
+    }
+
+    public function deleteProduct($productId)
+    {
+        $product = Product::where('id', $productId)->where('id_user', Auth::id())->first();
+        if ($product) {
+            $product->delete();
+            session()->flash('success', 'Producto eliminado correctamente.');
+            $this->loadUserProducts();
+        }
     }
 
     public function resetFields()
     {
         $this->reset([
-            'name','calories','total_fat','saturated_fat','trans_fat',
-            'colesterol','polyunsaturated_fat','monounsaturated_fat',
-            'carbohydrates','fiber','proteins','category_id','external_id'
+            'name','calories','total_fat','saturated_fat','trans_fat','colesterol',
+            'polyunsaturated_fat','monounsaturated_fat','carbohydrates','fiber','proteins',
+            'category_id','external_id'
         ]);
     }
 

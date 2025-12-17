@@ -3,8 +3,8 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\Menu;
 use App\Models\Plato;
+use App\Models\Menu;
 use Illuminate\Support\Facades\Auth;
 
 class MenusComponent extends Component
@@ -15,27 +15,24 @@ class MenusComponent extends Component
     public $quantities = [];
 
     public $userPlatos = [];
-    public $menus = [];
+    public $userMenus = [];
+
+    protected $listeners = ['refreshMenus' => 'loadUserMenus', 'deleteMenu'];
 
     public function mount()
     {
         $this->loadUserPlatos();
-        $this->loadMenus();
+        $this->loadUserMenus();
     }
 
     public function loadUserPlatos()
     {
-        // Trae todos los platos del usuario con sus productos
-        $this->userPlatos = Plato::where('user_id', Auth::id())
-            ->with('products.category')
-            ->get();
+        $this->userPlatos = Plato::where('user_id', Auth::id())->get();
     }
 
-    public function loadMenus()
+    public function loadUserMenus()
     {
-        $this->menus = Menu::where('user_id', Auth::id())
-            ->with('platos.products.category')
-            ->get();
+        $this->userMenus = Menu::where('user_id', Auth::id())->with('platos')->get();
     }
 
     public function openCreate()
@@ -46,20 +43,25 @@ class MenusComponent extends Component
     public function closeCreate()
     {
         $this->showCreate = false;
-        $this->reset(['name','selectedPlatos','quantities']);
+        $this->resetFields();
+    }
+
+    protected function rules()
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'selectedPlatos' => 'required|array|min:1',
+            'quantities' => 'required|array',
+        ];
     }
 
     public function createMenu()
     {
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'selectedPlatos' => 'required|array|min:1',
-            'quantities' => 'required|array'
-        ]);
+        $this->validate();
 
         $menu = Menu::create([
             'name' => $this->name,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         foreach ($this->selectedPlatos as $platoId) {
@@ -68,28 +70,35 @@ class MenusComponent extends Component
             ]);
         }
 
+        $this->closeCreate();
         session()->flash('success', 'Menú creado correctamente.');
 
-        // Cerrar overlay y recargar listas
-        $this->closeCreate();
-        $this->loadMenus();
+        // Recargar menús y platos
+        $this->loadUserMenus();
+        $this->loadUserPlatos();
     }
 
     public function deleteMenu($menuId)
     {
-        $menu = Menu::find($menuId);
-        if ($menu && $menu->user_id === Auth::id()) {
+        $menu = Menu::where('id', $menuId)->where('user_id', Auth::id())->first();
+        if ($menu) {
+            $menu->platos()->detach();
             $menu->delete();
-            $this->loadMenus();
             session()->flash('success', 'Menú eliminado correctamente.');
+            $this->loadUserMenus();
         }
+    }
+
+    public function resetFields()
+    {
+        $this->reset(['name', 'selectedPlatos', 'quantities']);
     }
 
     public function render()
     {
         return view('livewire.menus-component', [
             'userPlatos' => $this->userPlatos,
-            'menus' => $this->menus
+            'userMenus' => $this->userMenus,
         ]);
     }
 }
