@@ -2,7 +2,12 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PdfController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/pdf/mis-platos', [PdfController::class, 'userPlatos'])
+        ->name('pdf.user.platos');
+});
 
 Route::get('/', function () {
     return redirect()->route('login');

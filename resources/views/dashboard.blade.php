@@ -19,11 +19,15 @@
                 @livewire('plates-component')
             </div>
 
+            <a href="{{ route('pdf.user.platos') }}"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">
+                Descargar PDF de mis platos
+            </a>
+
             {{-- Panel Agregar Menú + Lista --}}
             <div class="lg:col-span-3">
                 @livewire('menus-component')
             </div>
-
         </div>
     </div>
 </x-app-layout>
