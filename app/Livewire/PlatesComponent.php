@@ -10,15 +10,13 @@ use Illuminate\Support\Facades\Auth;
 class PlatesComponent extends Component
 {
     public $showCreate = false;
-
     public $name;
     public $descripcion;
-
     public $selectedProducts = [];
     public $quantities = [];
 
-    public $publicProducts = [];
     public $userProducts = [];
+    public $publicProducts = [];
 
     protected $listeners = ['deletePlate'];
 
@@ -27,9 +25,6 @@ class PlatesComponent extends Component
         $this->loadProducts();
     }
 
-    /* ---------------------------
-        CARGA DE PRODUCTOS
-    --------------------------- */
     public function loadProducts()
     {
         $this->publicProducts = Product::whereNull('id_user')
@@ -43,9 +38,6 @@ class PlatesComponent extends Component
             ->get();
     }
 
-    /* ---------------------------
-        MODAL
-    --------------------------- */
     public function openCreate()
     {
         $this->showCreate = true;
@@ -57,9 +49,6 @@ class PlatesComponent extends Component
         $this->resetFields();
     }
 
-    /* ---------------------------
-        VALIDACIÓN
-    --------------------------- */
     protected function rules()
     {
         return [
@@ -69,9 +58,6 @@ class PlatesComponent extends Component
         ];
     }
 
-    /* ---------------------------
-        CREAR PLATO
-    --------------------------- */
     public function createPlato()
     {
         $this->validate();
@@ -80,65 +66,25 @@ class PlatesComponent extends Component
             'name' => $this->name,
             'descripcion' => $this->descripcion,
             'user_id' => Auth::id(),
-            'is_favorite' => false,
         ]);
 
         foreach ($this->selectedProducts as $productId) {
-            $plato->products()->attach($productId, [
-                'quantity' => $this->quantities[$productId] ?? 1
-            ]);
+            $plato->products()->attach($productId, ['quantity' => $this->quantities[$productId] ?? 1]);
         }
-
-        session()->flash('success', 'Plato creado correctamente.');
 
         $this->closeCreate();
         $this->loadProducts();
+        session()->flash('success', 'Plato creado correctamente.');
+        return redirect()->route('dashboard');
     }
 
-    /* ---------------------------
-        ELIMINAR PLATO
-    --------------------------- */
     public function deletePlate($platoId)
     {
-        $plato = Plato::where('id', $platoId)
-            ->where('user_id', Auth::id())
-            ->first();
-
+        $plato = Plato::where('id', $platoId)->where('user_id', Auth::id())->first();
         if ($plato) {
             $plato->products()->detach();
             $plato->delete();
-
             session()->flash('success', 'Plato eliminado correctamente.');
-        }
-    }
-
-    /* ---------------------------
-        FAVORITOS (PLATOS)
-    --------------------------- */
-    public function togglePlateFavorite($platoId)
-    {
-        $plato = Plato::where('id', $platoId)
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if ($plato) {
-            $plato->update([
-                'is_favorite' => !$plato->is_favorite
-            ]);
-        }
-    }
-
-    /* ---------------------------
-        FAVORITOS (PRODUCTOS)
-    --------------------------- */
-    public function toggleFavoriteProduct($productId)
-    {
-        $product = Product::find($productId);
-
-        if ($product && ($product->id_user === null || $product->id_user === Auth::id())) {
-            $product->update([
-                'is_favorite' => !$product->is_favorite
-            ]);
             $this->loadProducts();
         }
     }
@@ -148,15 +94,26 @@ class PlatesComponent extends Component
         $this->reset(['name', 'descripcion', 'selectedProducts', 'quantities']);
     }
 
-    /* ---------------------------
-        RENDER
-    --------------------------- */
+    public function toggleFavoriteProduct($productId)
+    {
+        $product = Product::find($productId);
+
+        if (!$product) return;
+
+        // Solo productos públicos o del usuario
+        if ($product->id_user === null || $product->id_user === Auth::id()) {
+            $product->update([
+                'is_favorite' => !$product->is_favorite
+            ]);
+
+            $this->loadProducts(); // recargar lista para reordenar
+        }
+    }
+
     public function render()
     {
         $userPlates = Plato::where('user_id', Auth::id())
-            ->orderByDesc('is_favorite')
-            ->orderBy('name')
-            ->with('products.category')
+            ->with('products')
             ->get();
 
         return view('livewire.plates-component', [

@@ -96,6 +96,7 @@ class ProductsComponent extends Component
         $this->loadUserProducts();
 
         session()->flash('success', 'Producto creado correctamente.');
+        return redirect()->route('dashboard');
     }
 
     public function deleteProduct($productId)

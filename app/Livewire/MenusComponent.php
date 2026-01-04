@@ -76,6 +76,7 @@ class MenusComponent extends Component
         // Recargar menús y platos
         $this->loadUserMenus();
         $this->loadUserPlatos();
+        return redirect()->route('dashboard');
     }
 
     public function deleteMenu($menuId)
