@@ -12,7 +12,8 @@ class Plato extends Model
     protected $fillable = [
         'name',
         'descripcion',
-        'user_id'
+        'user_id',
+        'is_favorite'
     ];
 
     // Relación con usuario

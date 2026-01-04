@@ -22,7 +22,12 @@ class Product extends Model
         'proteins',
         'category_id',
         'external_id',
-        'id_user'
+        'id_user',
+        'is_favorite'
+    ];
+
+    protected $casts = [
+        'is_favorite' => 'boolean',
     ];
 
     public function category()
