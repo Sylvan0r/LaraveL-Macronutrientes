@@ -8,6 +8,11 @@
 
     <div class="py-12 bg-gray-900 min-h-screen text-gray-100">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {{-- Panel Objetivos Nutricionales --}}
+            <div class="lg:col-span-3">
+                @livewire('nutritional-goals-component')
+            </div>
+            {{-- Botón Descargar PDF de mis platos --}}
             <a href="{{ route('pdf.user.platos') }}"
                 class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow align-middle text-center lg:col-span-3 block">
                 Descargar PDF de mis platos

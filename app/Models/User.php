@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\NutritionalGoal;
+use App\Models\DailyConsumption;
 
 class User extends Authenticatable
 {
@@ -32,6 +34,16 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function nutritionalGoal()
+    {
+        return $this->hasOne(NutritionalGoal::class);
+    }
+
+    public function dailyConsumptions()
+    {
+        return $this->hasMany(DailyConsumption::class);
+    }
 
     /**
      * Get the attributes that should be cast.
