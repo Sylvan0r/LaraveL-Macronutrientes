@@ -31,6 +31,11 @@
             <div class="lg:col-span-3">
                 @livewire('menus-component')
             </div>
+
+            {{-- Panel Agregar Menú + Lista --}}
+            <div class="lg:col-span-3">
+                @livewire('menu-calendar-component')
+            </div>
         </div>
     </div>
 </x-app-layout>

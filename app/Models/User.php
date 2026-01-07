@@ -45,6 +45,16 @@ class User extends Authenticatable
         return $this->hasMany(DailyConsumption::class);
     }
 
+    public function menus()
+    {
+        return $this->hasMany(Menu::class);
+    }
+
+    public function menuDays()
+    {
+        return $this->hasMany(MenuDay::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
