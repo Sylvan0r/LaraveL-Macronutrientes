@@ -3,6 +3,11 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
+use App\Http\Controllers\PlatoController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/mis-platos', [PlatoController::class, 'index'])->name('mis-platos');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/pdf/mis-platos', [PdfController::class, 'userPlatos'])

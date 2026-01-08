@@ -40,4 +40,20 @@ class Plato extends Model
     {
         return $this->belongsToMany(Menu::class, 'menu_plato')->withPivot('quantity')->withTimestamps();
     }
+
+    public function getMacros()
+    {
+        $total = ['prot' => 0, 'carbs' => 0, 'fat' => 0, 'kcal' => 0];
+        
+        foreach ($this->products as $product) {
+            // Asumiendo que tus productos tienen estos campos y la cantidad es en gramos
+            $ratio = $product->pivot->quantity / 100;
+            $total['prot'] += $product->proteinas * $ratio;
+            $total['carbs'] += $product->carbohidratos * $ratio;
+            $total['fat'] += $product->grasas * $ratio;
+            $total['kcal'] += $product->calorias * $ratio;
+        }
+        
+        return $total;
+    }
 }

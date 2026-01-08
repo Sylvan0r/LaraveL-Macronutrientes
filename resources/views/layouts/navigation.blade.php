@@ -13,7 +13,10 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-yellow-400">
-                        {{ __('Dashboard') }}
+                        {{ __('Objetivos Nutricionales') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('mis-platos')" :active="request()->routeIs('mis-platos')" class="text-yellow-400">
+                        {{ __('Mis Platos') }}
                     </x-nav-link>
                 </div>
             </div>

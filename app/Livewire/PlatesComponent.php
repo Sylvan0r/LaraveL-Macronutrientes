@@ -10,57 +10,49 @@ use Illuminate\Support\Facades\Auth;
 class PlatesComponent extends Component
 {
     public $showCreate = false;
-    public $name;
-    public $descripcion;
+    public $name, $descripcion;
     public $selectedProducts = [];
     public $quantities = [];
 
     public $userProducts = [];
     public $publicProducts = [];
 
-    protected $listeners = ['deletePlate'];
-
-    public function mount()
-    {
-        $this->loadProducts();
+    public function mount() {
+        $this->loadLists();
     }
 
-    public function loadProducts()
-    {
-        $this->publicProducts = Product::whereNull('id_user')
-            ->orderByDesc('is_favorite')
-            ->orderBy('name')
-            ->get();
-
-        $this->userProducts = Product::where('id_user', Auth::id())
-            ->orderByDesc('is_favorite')
-            ->orderBy('name')
-            ->get();
+    public function loadLists() {
+        $this->publicProducts = Product::whereNull('id_user')->orderByDesc('is_favorite')->orderBy('name')->get();
+        $this->userProducts = Product::where('id_user', Auth::id())->orderByDesc('is_favorite')->orderBy('name')->get();
     }
 
-    public function openCreate()
-    {
-        $this->showCreate = true;
-    }
+    public function openCreate() { $this->showCreate = true; }
 
-    public function closeCreate()
-    {
+    public function closeCreate() {
         $this->showCreate = false;
-        $this->resetFields();
+        $this->reset(['name', 'descripcion', 'selectedProducts', 'quantities']);
     }
 
-    protected function rules()
-    {
-        return [
-            'name' => 'required|string|max:255',
-            'selectedProducts' => 'required|array|min:1',
-            'quantities' => 'required|array',
-        ];
+    // Favorito para el Plato (Card principal)
+    public function toggleFavorite($platoId) {
+        $plato = Plato::where('id', $platoId)->where('user_id', Auth::id())->first();
+        if ($plato) $plato->update(['is_favorite' => !$plato->is_favorite]);
     }
 
-    public function createPlato()
-    {
-        $this->validate();
+    // Favorito para el Producto (Dentro del modal)
+    public function toggleFavoriteProduct($productId) {
+        $product = Product::find($productId);
+        if ($product) {
+            $product->update(['is_favorite' => !$product->is_favorite]);
+            $this->loadLists();
+        }
+    }
+
+    public function createPlato() {
+        $this->validate([
+            'name' => 'required|min:3',
+            'selectedProducts' => 'required|array|min:1'
+        ]);
 
         $plato = Plato::create([
             'name' => $this->name,
@@ -69,55 +61,29 @@ class PlatesComponent extends Component
         ]);
 
         foreach ($this->selectedProducts as $productId) {
-            $plato->products()->attach($productId, ['quantity' => $this->quantities[$productId] ?? 1]);
+            $qty = $this->quantities[$productId] ?? 100;
+            $plato->products()->attach($productId, ['quantity' => $qty]);
         }
 
         $this->closeCreate();
-        $this->loadProducts();
-        session()->flash('success', 'Plato creado correctamente.');
-        return redirect()->route('dashboard');
+        session()->flash('success', '¡Plato guardado con éxito!');
     }
 
-    public function deletePlate($platoId)
-    {
+    public function deletePlate($platoId) {
         $plato = Plato::where('id', $platoId)->where('user_id', Auth::id())->first();
         if ($plato) {
             $plato->products()->detach();
             $plato->delete();
             session()->flash('success', 'Plato eliminado correctamente.');
-            $this->loadProducts();
         }
     }
 
-    public function resetFields()
-    {
-        $this->reset(['name', 'descripcion', 'selectedProducts', 'quantities']);
-    }
-
-    public function toggleFavoriteProduct($productId)
-    {
-        $product = Product::find($productId);
-
-        if (!$product) return;
-
-        // Solo productos públicos o del usuario
-        if ($product->id_user === null || $product->id_user === Auth::id()) {
-            $product->update([
-                'is_favorite' => !$product->is_favorite
-            ]);
-
-            $this->loadProducts(); // recargar lista para reordenar
-        }
-    }
-
-    public function render()
-    {
-        $userPlates = Plato::where('user_id', Auth::id())
-            ->with('products')
-            ->get();
-
+    public function render() {
         return view('livewire.plates-component', [
-            'userPlates' => $userPlates,
+            'userPlates' => Plato::where('user_id', Auth::id())
+                ->with('products')
+                ->orderByDesc('is_favorite')
+                ->get(),
         ]);
     }
 }
