@@ -39,9 +39,6 @@
                             <div class="bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-700">
                                 @livewire('products-component')
                             </div>
-                            <div class="bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-700">
-                                @livewire('menus-component')
-                            </div>
                         </div>
                     </div>
                 </div>

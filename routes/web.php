@@ -4,9 +4,14 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\PlatoController;
+use App\Http\Controllers\MenuController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/mis-platos', [PlatoController::class, 'index'])->name('mis-platos');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/mis-menus', [MenuController::class, 'index'])->name('mis-menus');
 });
 
 Route::middleware(['auth'])->group(function () {

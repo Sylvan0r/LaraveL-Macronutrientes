@@ -32,7 +32,7 @@ class Menu extends Model
     /* ===========================
      | MACROS CALCULADOS
      =========================== */
-
+/* 
     public function getTotalCaloriesAttribute()
     {
         return $this->platos->sum(function ($plato) {
@@ -67,5 +67,22 @@ class Menu extends Model
                 fn ($product) => ($product->total_fat ?? 0) * $plato->pivot->quantity
             );
         });
+    }
+ */
+    public function getMacros()
+    {
+        $totals = ['kcal' => 0, 'prot' => 0, 'carbs' => 0, 'fat' => 0];
+
+        foreach ($this->platos as $plato) {
+            $platoMacros = $plato->getMacros(); // Usa el método que creamos en el modelo Plato
+            $menuQty = $plato->pivot->quantity;
+
+            $totals['kcal'] += $platoMacros['kcal'] * $menuQty;
+            $totals['prot'] += $platoMacros['prot'] * $menuQty;
+            $totals['carbs'] += $platoMacros['carbs'] * $menuQty;
+            $totals['fat'] += $platoMacros['fat'] * $menuQty;
+        }
+
+        return $totals;
     }
 }
