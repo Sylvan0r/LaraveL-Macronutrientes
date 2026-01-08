@@ -15,6 +15,9 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-yellow-400">
                         {{ __('Objetivos Nutricionales') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('mis-productos')" :active="request()->routeIs('mis-productos')" class="text-yellow-400">
+                        {{ __('Mis Productos') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('mis-platos')" :active="request()->routeIs('mis-platos')" class="text-yellow-400">
                         {{ __('Mis Platos') }}
                     </x-nav-link>

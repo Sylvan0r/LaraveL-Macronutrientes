@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\PlatoController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\ProductController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/mis-productos', [ProductController::class, 'index'])->name('mis-productos');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/mis-platos', [PlatoController::class, 'index'])->name('mis-platos');
