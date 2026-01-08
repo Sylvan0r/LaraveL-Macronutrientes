@@ -1,4 +1,4 @@
-<div class="p-4 bg-gray-800 text-white rounded-lg">
+<div class="p-4 bg-gray-800 text-white rounded-lg h-full">
     <h2 class="text-yellow-400 text-2xl mb-4">Calendario de Menús</h2>
 
     <input type="date" wire:model="selectedDate"

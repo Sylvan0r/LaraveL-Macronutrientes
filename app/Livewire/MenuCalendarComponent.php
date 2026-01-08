@@ -16,6 +16,20 @@ class MenuCalendarComponent extends Component
     public $menus;
     public $calendarMenus = [];
 
+    public $totals = [
+        'calories' => 0,
+        'proteins' => 0,
+        'fats' => 0,
+        'carbohydrates' => 0,
+    ];
+
+    public $alerts = [
+        'calories' => '',
+        'proteins' => '',
+        'fats' => '',
+        'carbohydrates' => '',
+    ];
+
     protected $listeners = ['refreshCalendar' => 'loadCalendar'];
 
     public function mount()
@@ -23,6 +37,7 @@ class MenuCalendarComponent extends Component
         $this->selectedDate = Carbon::today()->toDateString();
         $this->loadMenus();
         $this->loadCalendar();
+        $this->calculateTotals();
     }
 
     public function loadMenus()
@@ -39,9 +54,10 @@ class MenuCalendarComponent extends Component
             ->where('day', $this->selectedDate)
             ->with('menu.platos.products')
             ->get();
+
+        $this->calculateTotals();
     }
 
-    // ✅ Añadir menú al calendario y sumar al consumo diario
     public function addMenuToDate($menuId)
     {
         $menuDay = MenuDay::create([
@@ -52,11 +68,9 @@ class MenuCalendarComponent extends Component
 
         $this->addMenuToDailyConsumption($menuDay);
 
-        // 🔄 Redirigir para actualizar la página
-        return redirect(request()->header('Referer') ?? route('dashboard'));
+        $this->loadCalendar();
     }
 
-    // ✅ Quitar menú del calendario y restar del consumo diario
     public function removeMenuFromDate($menuDayId)
     {
         $menuDay = MenuDay::find($menuDayId);
@@ -65,8 +79,7 @@ class MenuCalendarComponent extends Component
             $menuDay->delete();
         }
 
-        // 🔄 Redirigir para mantener consistencia
-        return redirect(request()->header('Referer') ?? route('dashboard'));
+        $this->loadCalendar();
     }
 
     protected function addMenuToDailyConsumption(MenuDay $menuDay)
@@ -107,7 +120,6 @@ class MenuCalendarComponent extends Component
 
                 if ($consumption) {
                     $consumption->quantity -= $totalQuantity;
-
                     if ($consumption->quantity <= 0) {
                         $consumption->delete();
                     } else {
@@ -118,17 +130,53 @@ class MenuCalendarComponent extends Component
         }
     }
 
-    public function render()
+    // -----------------------------
+    // Calcular totales del día y avisos
+    // -----------------------------
+    public function calculateTotals()
     {
-        $calendarMenus = MenuDay::with('menu.platos.products')
-            ->where('user_id', Auth::id())
+        $this->totals = [
+            'calories' => 0,
+            'proteins' => 0,
+            'fats' => 0,
+            'carbohydrates' => 0,
+        ];
+
+        $dailyConsumptions = DailyConsumption::where('user_id', Auth::id())
+            ->where('date', $this->selectedDate)
+            ->with('product')
             ->get();
 
-        $goals = NutritionalGoal::where('user_id', Auth::id())->first();
+        foreach ($dailyConsumptions as $consumption) {
+            $this->totals['calories'] += ($consumption->product->calories ?? 0) * $consumption->quantity;
+            $this->totals['proteins'] += ($consumption->product->proteins ?? 0) * $consumption->quantity;
+            $this->totals['fats'] += ($consumption->product->total_fat ?? 0) * $consumption->quantity;
+            $this->totals['carbohydrates'] += ($consumption->product->carbohydrates ?? 0) * $consumption->quantity;
+        }
 
+        $goals = Auth::user()->nutritionalGoal;
+
+        if ($goals) {
+            foreach (['calories','proteins','fats','carbohydrates'] as $key) {
+                if ($this->totals[$key] > $goals->$key) {
+                    $this->alerts[$key] = '🟢 Superado';
+                } elseif ($this->totals[$key] >= $goals->$key * 0.9) {
+                    $this->alerts[$key] = '🟡 Casi alcanzado';
+                } else {
+                    $this->alerts[$key] = '🔴 No alcanzado';
+                }
+            }
+        }
+    }
+
+    public function render()
+    {
         return view('livewire.menu-calendar-component', [
-            'calendarMenus' => $calendarMenus,
-            'goals' => $goals,
+            'menus' => $this->menus,
+            'calendarMenus' => $this->calendarMenus,
+            'totals' => $this->totals,
+            'alerts' => $this->alerts,
+            'goals' => Auth::user()->nutritionalGoal,
         ]);
     }
 }

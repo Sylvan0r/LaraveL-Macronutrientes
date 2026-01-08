@@ -5,7 +5,7 @@
             <h2 class="text-yellow-400 text-3xl">Platos</h2>
             <p>Añade nuevos platos usando productos públicos o tus productos personales.</p>
         </div>
-        <button wire:click="openCreate" class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded shadow w-full">
+        <button wire:click="openCreate" class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded shadow w-full">
             Crear Plato
         </button>
 
