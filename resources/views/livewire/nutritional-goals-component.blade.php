@@ -1,4 +1,5 @@
 <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 space-y-6">
+
     <h2 class="text-yellow-400 text-3xl">Objetivos nutricionales</h2>
 
     @if(session()->has('success'))
@@ -30,9 +31,28 @@
     </button>
 
     <!-- Progreso diario -->
-    <div class="space-y-3">
+    <div class="space-y-3 mt-4">
         @foreach(['calories','proteins','fats','carbohydrates'] as $nutrient)
-            @php $percent = $this->percentage($nutrient); @endphp
+            @php 
+                $percent = $this->percentage($nutrient); 
+                if ($percent > 100) {
+                    $color = 'bg-orange-600'; // sobrepasado
+                    $status = 'Objetivo sobrepasado';
+                } elseif ($percent == 100) {
+                    $color = 'bg-green-500'; // cumplido
+                    $status = 'Objetivo cumplido';
+                } elseif ($percent >= 70) {
+                    $color = 'bg-yellow-400'; // casi cumplido
+                    $status = 'Casi cumplido';
+                } elseif ($percent >= 40) {
+                    $color = 'bg-orange-500'; // en proceso
+                    $status = 'En proceso';
+                } else {
+                    $color = 'bg-red-500'; // no cumplido
+                    $status = 'No alcanzado';
+                }
+            @endphp
+
             <div>
                 <div class="flex justify-between text-sm mb-1">
                     <span class="capitalize">{{ $nutrient }}</span>
@@ -40,22 +60,11 @@
                 </div>
 
                 <div class="w-full bg-gray-700 rounded h-3">
-                    <div
-                        class="h-3 rounded
-                        {{ $percent < 90 ? 'bg-yellow-400' : ($percent <= 100 ? 'bg-red-500' : 'bg-green-500') }}"
-                        style="width: {{ min($percent,100) }}%">
-                    </div>
+                    <div class="h-3 rounded {{ $color }}" style="width: {{ min($percent, 100) }}%"></div>
                 </div>
 
                 <p class="text-xs mt-1">
-                    @if($percent > 100)
-                        🟢 Objetivo superado
-                    @elseif($percent >= 90)
-                        🟡 Objetivo casi cumplido
-                    @else
-                        🔴 Aún no alcanzado
-                    @endif
-                    ({{ $percent }}%)
+                    {{ $status }} ({{ $percent }}%)
                 </p>
             </div>
         @endforeach

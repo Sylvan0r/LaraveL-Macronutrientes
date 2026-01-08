@@ -25,11 +25,7 @@
                         <p class="font-semibold">{{ $menuDay->menu->name }}</p>
                         @foreach($menuDay->menu->platos as $plato)
                             <div class="flex items-center gap-2 text-sm">
-                                <button wire:click="togglePlatoFavorite({{ $plato->id }})"
-                                        class="{{ $plato->is_favorite ? 'text-yellow-400' : 'text-gray-500' }}">
-                                    {{ $plato->is_favorite ? '★' : '☆' }}
-                                </button>
-                                {{ $plato->name }} (x{{ $plato->pivot->quantity }})
+                                <span>{{ $plato->name }} (x{{ $plato->pivot->quantity }})</span>
                             </div>
                         @endforeach
                     </div>
