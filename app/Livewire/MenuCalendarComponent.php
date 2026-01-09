@@ -14,7 +14,7 @@ class MenuCalendarComponent extends Component
 {
     public $selectedDate;
     public $menus;
-    public $calendarMenus = [];
+    // Quitamos calendarMenus de aquí para cargarlo fresco en el render
 
     protected $listeners = ['refreshCalendar' => 'loadCalendar'];
 
@@ -22,26 +22,20 @@ class MenuCalendarComponent extends Component
     {
         $this->selectedDate = Carbon::today()->toDateString();
         $this->loadMenus();
-        $this->loadCalendar();
     }
 
     public function loadMenus()
     {
         $this->menus = Menu::where('user_id', Auth::id())
-            ->with('platos.products')
             ->orderByDesc('created_at')
             ->get();
     }
 
     public function loadCalendar()
     {
-        $this->calendarMenus = MenuDay::where('user_id', Auth::id())
-            ->where('day', $this->selectedDate)
-            ->with('menu.platos.products')
-            ->get();
+        // Forzamos el refresco del componente
     }
 
-    // Añadir menú al calendario y sumar al consumo diario
     public function addMenuToDate($menuId)
     {
         $menuDay = MenuDay::create([
@@ -51,24 +45,18 @@ class MenuCalendarComponent extends Component
         ]);
 
         $this->addMenuToDailyConsumption($menuDay);
-
-        // Recargar datos
-        $this->loadCalendar();
-        $this->loadMenus();
+        $this->dispatch('daily-consumption-updated'); // Avisamos al componente de metas
+        session()->flash('success', 'Menú añadido al calendario.');
     }
 
-    // Quitar menú del calendario y restar del consumo diario
     public function removeMenuFromDate($menuDayId)
     {
-        $menuDay = MenuDay::find($menuDayId);
-        if ($menuDay && $menuDay->user_id === Auth::id()) {
+        $menuDay = MenuDay::where('id', $menuDayId)->where('user_id', Auth::id())->first();
+        if ($menuDay) {
             $this->removeMenuFromDailyConsumption($menuDay);
             $menuDay->delete();
+            $this->dispatch('daily-consumption-updated');
         }
-
-        // Recargar datos
-        $this->loadCalendar();
-        $this->loadMenus();
     }
 
     protected function addMenuToDailyConsumption(MenuDay $menuDay)
@@ -109,12 +97,7 @@ class MenuCalendarComponent extends Component
 
                 if ($consumption) {
                     $consumption->quantity -= $totalQuantity;
-
-                    if ($consumption->quantity <= 0) {
-                        $consumption->delete();
-                    } else {
-                        $consumption->save();
-                    }
+                    $consumption->quantity <= 0 ? $consumption->delete() : $consumption->save();
                 }
             }
         }
@@ -129,54 +112,28 @@ class MenuCalendarComponent extends Component
 
         $goals = NutritionalGoal::where('user_id', Auth::id())->first();
 
-        // Calcular totales del día
-        $totals = [
-            'calories' => 0,
-            'proteins' => 0,
-            'fats' => 0,
-            'carbohydrates' => 0,
+        // Inicializar los 10 campos
+        $nutrients = [
+            'calories', 'proteins', 'fats', 'carbohydrates', 
+            'saturated_fat', 'trans_fat', 'polyunsaturated_fat', 
+            'monounsaturated_fat', 'fiber', 'colesterol'
         ];
-        $alerts = [];
+        
+        $totals = array_fill_keys($nutrients, 0);
 
         foreach ($calendarMenus as $menuDay) {
-            foreach ($menuDay->menu->platos as $plato) {
-                $menuQty = $plato->pivot->quantity ?? 1;
-                foreach ($plato->products as $product) {
-                    $prodQty = $product->pivot->quantity ?? 1;
-                    $qty = $menuQty * $prodQty;
-
-                    $totals['calories'] += ($product->calories ?? 0) * $qty;
-                    $totals['proteins'] += ($product->proteins ?? 0) * $qty;
-                    $totals['fats'] += ($product->total_fat ?? 0) * $qty;
-                    $totals['carbohydrates'] += ($product->carbohydrates ?? 0) * $qty;
-                }
-            }
-        }
-
-        if ($goals) {
-            foreach ($totals as $key => $value) {
-                $percent = $goals->$key ? round(($value / $goals->$key) * 100, 1) : 0;
-
-                if ($percent < 40) {
-                    $alerts[$key] = '🔴 No cumplido';
-                } elseif ($percent < 70) {
-                    $alerts[$key] = '🟠 En proceso';
-                } elseif ($percent < 100) {
-                    $alerts[$key] = '🟡 Casi cumplido';
-                } elseif ($percent == 100) {
-                    $alerts[$key] = '🟢 Cumplido';
-                } else {
-                    $alerts[$key] = '🟠 Sobrepasado';
-                }
+            $menuMacros = $menuDay->menu->getMacros(); // Usamos el método que creamos en el modelo Menu
+            foreach ($nutrients as $n) {
+                // Mapeo manual si los nombres en Menu::getMacros() son diferentes
+                // Aquí asumo que coinciden:
+                $totals[$n] += $menuMacros[$n] ?? 0;
             }
         }
 
         return view('livewire.menu-calendar-component', [
-            'menus' => $this->menus,
             'calendarMenus' => $calendarMenus,
             'goals' => $goals,
             'totals' => $totals,
-            'alerts' => $alerts,
         ]);
     }
 }

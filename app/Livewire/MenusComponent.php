@@ -12,40 +12,31 @@ class MenusComponent extends Component
     public $showCreate = false;
     public $name;
     public $selectedPlatos = [];
-    public $quantities = [];
-
-    protected $listeners = ['deleteMenu'];
+    public $quantities = []; // Guardará las raciones por plato ID
 
     public function togglePlatoFavorite($platoId)
     {
-        $plato = \App\Models\Plato::where('id', $platoId)
-            ->where('user_id', auth()->id())
-            ->first();
-
+        $plato = Plato::where('id', $platoId)->where('user_id', Auth::id())->first();
         if ($plato) {
-            $plato->update([
-                'is_favorite' => !$plato->is_favorite,
-            ]);
-
-            // Volvemos a cargar los platos para que la vista se refresque
-            $this->userPlatos = \App\Models\Plato::where('user_id', auth()->id())
-                ->orderByDesc('is_favorite')
-                ->orderBy('name')
-                ->get();
+            $plato->update(['is_favorite' => !$plato->is_favorite]);
         }
     }
 
-    public function openCreate() { $this->showCreate = true; }
-
-    public function closeCreate() {
-        $this->showCreate = false;
+    public function openCreate() 
+    { 
         $this->reset(['name', 'selectedPlatos', 'quantities']);
+        $this->showCreate = true; 
+    }
+
+    public function closeCreate() 
+    {
+        $this->showCreate = false;
     }
 
     public function createMenu()
     {
         $this->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|min:3',
             'selectedPlatos' => 'required|array|min:1',
         ]);
 
@@ -55,9 +46,11 @@ class MenusComponent extends Component
         ]);
 
         foreach ($this->selectedPlatos as $platoId) {
-            $menu->platos()->attach($platoId, [
-                'quantity' => $this->quantities[$platoId] ?? 1
-            ]);
+            // Si no se especificó cantidad, por defecto es 1 ración
+            $qty = (isset($this->quantities[$platoId]) && $this->quantities[$platoId] > 0) 
+                   ? $this->quantities[$platoId] : 1;
+
+            $menu->platos()->attach($platoId, ['quantity' => $qty]);
         }
 
         $this->closeCreate();
@@ -77,8 +70,14 @@ class MenusComponent extends Component
     public function render()
     {
         return view('livewire.menus-component', [
-            'userPlatos' => Plato::where('user_id', Auth::id())->orderByDesc('is_favorite')->get(),
-            'userMenus' => Menu::where('user_id', Auth::id())->with('platos.products')->latest()->get(),
+            'userPlatos' => Plato::where('user_id', Auth::id())
+                                ->orderByDesc('is_favorite')
+                                ->orderBy('name')
+                                ->get(),
+            'userMenus' => Menu::where('user_id', Auth::id())
+                                ->with('platos')
+                                ->latest()
+                                ->get(),
         ]);
     }
 }

@@ -11,62 +11,52 @@ class PlatesComponent extends Component
 {
     public $showCreate = false;
     public $name, $descripcion;
-    public $selectedProducts = [];
-    public $quantities = [];
+    public $selectedIngredients = [];
+    public $tempQuantities = []; 
 
-    public $userProducts = [];
-    public $publicProducts = [];
-
-    public function mount() {
-        $this->loadLists();
+    public function openCreate() { 
+        $this->reset(['name', 'descripcion', 'selectedIngredients', 'tempQuantities']);
+        $this->showCreate = true; 
     }
 
-    public function loadLists() {
-        $this->publicProducts = Product::whereNull('id_user')->orderByDesc('is_favorite')->orderBy('name')->get();
-        $this->userProducts = Product::where('id_user', Auth::id())->orderByDesc('is_favorite')->orderBy('name')->get();
+    public function closeCreate() { $this->showCreate = false; }
+
+    public function addProduct($productId) {
+        $product = Product::find($productId);
+        if (!$product) return;
+
+        // Validamos que exista una cantidad, si no, por defecto 100g
+        $qty = (isset($this->tempQuantities[$productId]) && $this->tempQuantities[$productId] > 0) 
+               ? $this->tempQuantities[$productId] : 100;
+
+        $this->selectedIngredients[] = [
+            'id' => $product->id,
+            'name' => $product->name,
+            'quantity' => $qty,
+            'calories' => $product->calories,
+            'proteins' => $product->proteins,
+            'carbohydrates' => $product->carbohydrates,
+            'total_fat' => $product->total_fat,
+            'saturated_fat' => $product->saturated_fat,
+            'trans_fat' => $product->trans_fat,
+            'monounsaturated_fat' => $product->monounsaturated_fat,
+            'polyunsaturated_fat' => $product->polyunsaturated_fat,
+            'fiber' => $product->fiber,
+            'colesterol' => $product->colesterol,
+        ];
+        
+        // Limpiamos el input de ese producto específico
+        unset($this->tempQuantities[$productId]);
     }
 
-    public function openCreate() { $this->showCreate = true; }
-
-    public function closeCreate() {
-        $this->showCreate = false;
-        $this->reset(['name', 'descripcion', 'selectedProducts', 'quantities']);
+    public function removeIngredient($index) {
+        unset($this->selectedIngredients[$index]);
+        $this->selectedIngredients = array_values($this->selectedIngredients);
     }
 
-    // Favorito para el Plato (Card principal)
     public function toggleFavorite($platoId) {
         $plato = Plato::where('id', $platoId)->where('user_id', Auth::id())->first();
-        if ($plato) $plato->update(['is_favorite' => !$plato->is_favorite]);
-    }
-
-    // Favorito para el Producto (Dentro del modal)
-    public function toggleFavoriteProduct($productId) {
-        $product = Product::find($productId);
-        if ($product) {
-            $product->update(['is_favorite' => !$product->is_favorite]);
-            $this->loadLists();
-        }
-    }
-
-    public function createPlato() {
-        $this->validate([
-            'name' => 'required|min:3',
-            'selectedProducts' => 'required|array|min:1'
-        ]);
-
-        $plato = Plato::create([
-            'name' => $this->name,
-            'descripcion' => $this->descripcion,
-            'user_id' => Auth::id(),
-        ]);
-
-        foreach ($this->selectedProducts as $productId) {
-            $qty = $this->quantities[$productId] ?? 100;
-            $plato->products()->attach($productId, ['quantity' => $qty]);
-        }
-
-        $this->closeCreate();
-        session()->flash('success', '¡Plato guardado con éxito!');
+        if ($plato) { $plato->update(['is_favorite' => !$plato->is_favorite]); }
     }
 
     public function deletePlate($platoId) {
@@ -78,12 +68,40 @@ class PlatesComponent extends Component
         }
     }
 
+    public function createPlato() {
+        $this->validate([
+            'name' => 'required|min:3',
+            'selectedIngredients' => 'required|array|min:1'
+        ], [
+            'name.required' => 'Debes ponerle un nombre al plato.',
+            'selectedIngredients.required' => 'Debes añadir al menos un ingrediente.'
+        ]);
+
+        try {
+            $plato = Plato::create([
+                'name' => $this->name,
+                'descripcion' => $this->descripcion,
+                'user_id' => Auth::id(),
+                'is_favorite' => false
+            ]);
+
+            foreach ($this->selectedIngredients as $item) {
+                $plato->products()->attach($item['id'], ['quantity' => $item['quantity']]);
+            }
+
+            $this->closeCreate();
+            session()->flash('success', '¡Receta guardada con éxito!');
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error en la base de datos: ' . $e->getMessage());
+        }
+    }
+
     public function render() {
         return view('livewire.plates-component', [
-            'userPlates' => Plato::where('user_id', Auth::id())
-                ->with('products')
-                ->orderByDesc('is_favorite')
-                ->get(),
+            'userPlates' => Plato::where('user_id', Auth::id())->with('products')->orderByDesc('is_favorite')->orderByDesc('created_at')->get(),
+            'myProducts' => Product::where('id_user', Auth::id())->orderBy('name')->get(),
+            'publicProducts' => Product::whereNull('id_user')->orderBy('name')->get(),
         ]);
     }
 }

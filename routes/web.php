@@ -19,10 +19,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mis-menus', [MenuController::class, 'index'])->name('mis-menus');
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/pdf/mis-platos', [PdfController::class, 'userPlatos'])
-        ->name('pdf.user.platos');
-});
+Route::get('/exportar-pdf/{date?}', [PdfController::class, 'userPlatos'])->name('pdf.user.platos');
 
 Route::get('/', function () {
     return redirect()->route('login');

@@ -8,17 +8,13 @@ use Carbon\Carbon;
 
 class NutritionalGoalsComponent extends Component
 {
-    public $calories;
-    public $proteins;
-    public $fats;
-    public $carbohydrates;
+    // Propiedades sincronizadas con los nombres de la DB
+    public $calories, $proteins, $fats, $carbohydrates;
+    public $saturated_fat, $trans_fat, $polyunsaturated_fat, $monounsaturated_fat, $fiber, $colesterol;
 
-    public $consumed = [
-        'calories' => 0,
-        'proteins' => 0,
-        'fats' => 0,
-        'carbohydrates' => 0,
-    ];
+    public $consumed = [];
+
+    protected $listeners = ['daily-consumption-updated' => 'calculateDailyConsumption'];
 
     public function mount()
     {
@@ -35,11 +31,26 @@ class NutritionalGoalsComponent extends Component
             $this->proteins = $goal->proteins;
             $this->fats = $goal->fats;
             $this->carbohydrates = $goal->carbohydrates;
+            $this->saturated_fat = $goal->saturated_fat;
+            $this->trans_fat = $goal->trans_fat;
+            $this->polyunsaturated_fat = $goal->polyunsaturated_fat;
+            $this->monounsaturated_fat = $goal->monounsaturated_fat;
+            $this->fiber = $goal->fiber;
+            $this->colesterol = $goal->colesterol;
         }
     }
 
     public function saveGoals()
     {
+        $this->validate([
+            'calories' => 'nullable|numeric|min:0',
+            'proteins' => 'nullable|numeric|min:0',
+            'fats' => 'nullable|numeric|min:0',
+            'carbohydrates' => 'nullable|numeric|min:0',
+            'fiber' => 'nullable|numeric|min:0',
+            'colesterol' => 'nullable|numeric|min:0',
+        ]);
+
         Auth::user()->nutritionalGoal()->updateOrCreate(
             ['user_id' => Auth::id()],
             [
@@ -47,9 +58,16 @@ class NutritionalGoalsComponent extends Component
                 'proteins' => $this->proteins,
                 'fats' => $this->fats,
                 'carbohydrates' => $this->carbohydrates,
+                'saturated_fat' => $this->saturated_fat,
+                'trans_fat' => $this->trans_fat,
+                'polyunsaturated_fat' => $this->polyunsaturated_fat,
+                'monounsaturated_fat' => $this->monounsaturated_fat,
+                'fiber' => $this->fiber,
+                'colesterol' => $this->colesterol,
             ]
         );
 
+        $this->dispatch('goals-updated'); // Opcional: para avisar a otros componentes
         session()->flash('success', 'Objetivos nutricionales guardados correctamente.');
     }
 
@@ -61,25 +79,32 @@ class NutritionalGoalsComponent extends Component
             ->with('product')
             ->get();
 
+        // Mapeo exacto de nombres de columnas de la tabla products
         $this->consumed = [
-            'calories' => $consumptions->sum(fn($c) => ($c->product->calories ?? 0) * $c->quantity),
-            'proteins' => $consumptions->sum(fn($c) => ($c->product->proteins ?? 0) * $c->quantity),
-            'fats' => $consumptions->sum(fn($c) => ($c->product->total_fat ?? 0) * $c->quantity),
-            'carbohydrates' => $consumptions->sum(fn($c) => ($c->product->carbohydrates ?? 0) * $c->quantity),
+            'calories' => $consumptions->sum(fn($c) => ($c->product->calories ?? 0) * ($c->quantity / 100)),
+            'proteins' => $consumptions->sum(fn($c) => ($c->product->proteins ?? 0) * ($c->quantity / 100)),
+            'fats' => $consumptions->sum(fn($c) => ($c->product->total_fat ?? 0) * ($c->quantity / 100)),
+            'carbohydrates' => $consumptions->sum(fn($c) => ($c->product->carbohydrates ?? 0) * ($c->quantity / 100)),
+            'saturated_fat' => $consumptions->sum(fn($c) => ($c->product->saturated_fat ?? 0) * ($c->quantity / 100)),
+            'trans_fat' => $consumptions->sum(fn($c) => ($c->product->trans_fat ?? 0) * ($c->quantity / 100)),
+            'polyunsaturated_fat' => $consumptions->sum(fn($c) => ($c->product->polyunsaturated_fat ?? 0) * ($c->quantity / 100)),
+            'monounsaturated_fat' => $consumptions->sum(fn($c) => ($c->product->monounsaturated_fat ?? 0) * ($c->quantity / 100)),
+            'fiber' => $consumptions->sum(fn($c) => ($c->product->fiber ?? 0) * ($c->quantity / 100)),
+            'colesterol' => $consumptions->sum(fn($c) => ($c->product->colesterol ?? 0) * ($c->quantity / 100)),
         ];
     }
 
     public function percentage(string $nutrient): float
     {
-        if (empty($this->$nutrient) || $this->$nutrient == 0) {
+        $goalValue = $this->$nutrient;
+        
+        if (empty($goalValue) || $goalValue <= 0) {
             return 0;
         }
 
-        return round(($this->consumed[$nutrient] / $this->$nutrient) * 100, 1);
+        $consumedValue = $this->consumed[$nutrient] ?? 0;
+        return round(($consumedValue / $goalValue) * 100, 1);
     }
-
-    // Escuchar evento para actualizar consumo en tiempo real
-    protected $listeners = ['daily-consumption-updated' => 'calculateDailyConsumption'];
 
     public function render()
     {

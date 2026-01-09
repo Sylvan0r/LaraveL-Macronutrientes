@@ -9,26 +9,9 @@ class Plato extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'descripcion',
-        'user_id',
-        'is_favorite'
-    ];
+    protected $fillable = ['name', 'descripcion', 'user_id', 'is_favorite'];
 
-    // Relación con usuario
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    // Relación con contenidos
-    public function contents()
-    {
-        return $this->hasMany(Content::class);
-    }
-
-    // app/Models/Plato.php
+    // Relación con Productos (Muchos a Muchos)
     public function products()
     {
         return $this->belongsToMany(Product::class, 'plato_product')
@@ -36,24 +19,22 @@ class Plato extends Model
                     ->withTimestamps();
     }
 
-    public function menus()
-    {
-        return $this->belongsToMany(Menu::class, 'menu_plato')->withPivot('quantity')->withTimestamps();
-    }
-
+    // Método para calcular los 10 atributos para la vista principal
     public function getMacros()
     {
-        $total = ['prot' => 0, 'carbs' => 0, 'fat' => 0, 'kcal' => 0];
-        
+        $macros = [
+            'calories' => 0, 'proteins' => 0, 'carbohydrates' => 0, 'total_fat' => 0,
+            'saturated_fat' => 0, 'trans_fat' => 0, 'monounsaturated_fat' => 0,
+            'polyunsaturated_fat' => 0, 'fiber' => 0, 'colesterol' => 0
+        ];
+
         foreach ($this->products as $product) {
-            // Asumiendo que tus productos tienen estos campos y la cantidad es en gramos
-            $ratio = $product->pivot->quantity / 100;
-            $total['prot'] += $product->proteinas * $ratio;
-            $total['carbs'] += $product->carbohidratos * $ratio;
-            $total['fat'] += $product->grasas * $ratio;
-            $total['kcal'] += $product->calorias * $ratio;
+            $factor = ($product->pivot->quantity ?? 0) / 100;
+            foreach ($macros as $key => $value) {
+                $macros[$key] += ($product->$key ?? 0) * $factor;
+            }
         }
-        
-        return $total;
+
+        return $macros;
     }
 }

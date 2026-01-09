@@ -14,6 +14,7 @@ class Product extends Model
         'calories',
         'total_fat',
         'saturated_fat',
+        'trans_fat',
         'colesterol',
         'polyunsaturated_fat',
         'monounsaturated_fat',

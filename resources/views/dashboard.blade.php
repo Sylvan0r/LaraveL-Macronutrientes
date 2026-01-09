@@ -34,14 +34,6 @@
                     <span class="text-yellow-400 font-black text-xs uppercase tracking-[0.3em]">Dashboard</span>
                     <h3 class="text-3xl font-black text-white uppercase tracking-tighter">Resumen <span class="text-gray-500 text-2xl italic">Estratégico</span></h3>
                 </div>
-                
-                <a href="{{ route('pdf.user.platos') }}"
-                   class="group flex items-center gap-3 bg-white hover:bg-yellow-400 text-gray-900 font-black px-8 py-4 rounded-2xl transition-all duration-500 shadow-xl active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    EXPORTAR DIETA PDF
-                </a>
             </div>
 
             {{-- GRID PRINCIPAL --}}
