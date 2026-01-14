@@ -137,8 +137,24 @@ class ApiProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(product $product)
+    public function destroy($id)
     {
-        //
+        if(Auth::check()) {
+            $product = Product::find($id);
+
+            if (!$product) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Producto no encontrado',
+                ], 404);
+            }
+
+            $product->delete();
+
+            return response()->json ([
+                'status' => true,
+                'message' => 'Producto eliminado con éxito',
+            ], 200);
+        }
     }
 }

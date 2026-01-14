@@ -20,6 +20,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::apiResource('products', ApiProductController::class);    
     Route::post('/createProduct', [ApiProductController::class, 'store']);
     Route::put('/editProduct/{id}', [ApiProductController::class, 'update']);
+    Route::put('/deleteProduct/{id}', [ApiProductController::class, 'destroy']);
 });
 
 Route::post('/login', [UserController::class, 'index']);
