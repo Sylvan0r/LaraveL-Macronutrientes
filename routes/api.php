@@ -19,6 +19,7 @@ Route::get('/status', function (){
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::apiResource('products', ApiProductController::class);    
     Route::post('/createProduct', [ApiProductController::class, 'store']);
+    Route::put('/editProduct/{id}', [ApiProductController::class, 'update']);
 });
 
 Route::post('/login', [UserController::class, 'index']);
