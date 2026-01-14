@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ApiProductController extends Controller
 {
@@ -25,7 +26,7 @@ class ApiProductController extends Controller
      */
     public function create(Request $request)
     {
-        
+        //
     }
 
     /**
@@ -33,7 +34,37 @@ class ApiProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'calories' => 'nullable|numeric',
+            'total_fat' => 'nullable|numeric',
+            'saturated_fat' => 'nullable|numeric',
+            'trans_fat' => 'nullable|numeric',
+            'colesterol' => 'nullable|numeric',
+            'polyunsaturated_fat' => 'nullable|numeric',
+            'monounsaturated_fat' => 'nullable|numeric',
+            'carbohydrates' => 'nullable|numeric',
+            'fiber' => 'nullable|numeric',
+            'proteins' => 'nullable|numeric',
+            'category_id' => 'required|exists:categories,id'
+        ]);
+
+        // 2. Verificar autenticación (opcional si usas el middleware)
+        if (Auth::check()) {
+            // 3. Crear el producto
+            $product = Product::create($validatedData);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Producto creado con éxito',
+                'data' => $product
+            ], 201); // 201 significa "Created"
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'No autorizado',
+        ], 401);
     }
 
     /**
