@@ -24,6 +24,11 @@
                     <x-nav-link :href="route('mis-menus')" :active="request()->routeIs('mis-menus')" class="text-yellow-400">
                         {{ __('Mis Menus') }}
                     </x-nav-link>
+                    @role('admin')
+                        <x-nav-link :href="route('admin.stats')" :active="request()->routeIs('admin.stats')" class="text-yellow-400">
+                            {{ __('Estadísticas') }}
+                        </x-nav-link>
+                    @endrole
                 </div>
             </div>
 
