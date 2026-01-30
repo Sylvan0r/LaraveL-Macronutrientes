@@ -43,7 +43,9 @@
                                 </span>
                             @endforeach
                         </div>
-                        <button wire:click="deletePlate({{ $plato->id }})" class="mt-6 text-gray-700 hover:text-rose-500 font-black text-[9px] uppercase tracking-widest transition-all text-left">Eliminar Plato</button>
+                        @can('eliminar platos')
+                            <button wire:click="deletePlate({{ $plato->id }})" class="mt-6 text-gray-700 hover:text-rose-500 font-black text-[9px] uppercase tracking-widest transition-all text-left">Eliminar Plato</button>
+                        @endcan
                     </div>
 
                     {{-- Grid 10 Atributos Uniforme --}}

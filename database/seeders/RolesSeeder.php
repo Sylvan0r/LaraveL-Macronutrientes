@@ -18,6 +18,8 @@ class RolesSeeder extends Seeder
         Permission::create(['name' => 'editar productos']);
         Permission::create(['name' => 'ver productos']);
         Permission::create(['name' => 'eliminar productos']);
+        Permission::create(['name' => 'eliminar platos']);
+        Permission::create(['name' => 'eliminar menus']);
 
         // Permisos para otras entidades similares ...
         // Permission::create(['name' => 'crear platos']);
@@ -36,5 +38,5 @@ class RolesSeeder extends Seeder
             'ver productos',
             // (otros permisos que conciernan sin delete)
         ]);
-}
+    }
 }

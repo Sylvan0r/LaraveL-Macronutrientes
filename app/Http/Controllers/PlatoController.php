@@ -17,4 +17,14 @@ class PlatoController extends Controller
 
         return view('platos.mis-platos', compact('platos'));
     }
+
+    public function destroy(Plato $plato)
+    {
+        abort_unless(auth()->user()->can('eliminar platos'), 403);
+
+        $plato->delete();
+
+        return redirect()->route('platos.index')
+            ->with('success', 'Plato eliminado');
+    }
 }

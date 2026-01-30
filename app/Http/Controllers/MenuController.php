@@ -19,4 +19,14 @@ class MenuController extends Controller
         // Usamos el nombre de variable que espera tu vista o el componente.
         return view('platos.mis-menus', compact('userMenus'));
     }
+
+    public function destroy(Menu $menu)
+    {
+        abort_unless(auth()->user()->can('eliminar menus'), 403);
+
+        $menu->delete();
+
+        return redirect()->route('menus.index')
+            ->with('success', 'Menú eliminado');
+    }
 }

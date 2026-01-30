@@ -19,4 +19,14 @@ class ProductController extends Controller
         // Usamos compact con el nombre correcto de la variable
         return view('platos.mis-productos', compact('userProducts'));
     }
+
+    public function destroy(Product $product)
+    {
+        abort_unless(auth()->user()->can('eliminar productos'), 403);
+
+        $product->delete();
+
+        return redirect()->route('products.index')
+            ->with('success', 'Producto eliminado');
+    }
 }

@@ -68,9 +68,12 @@
                     </div>
 
                     {{-- Footer Tarjeta --}}
+                    
                     <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-800">
                         <span class="text-[9px] text-gray-600 font-bold uppercase tracking-widest italic">Por 100g</span>
-                        <button wire:click="deleteProduct({{ $product->id }})" class="text-gray-700 hover:text-rose-500 font-black text-[9px] uppercase transition-all tracking-widest">Eliminar</button>
+                        @can('eliminar productos')
+                            <button wire:click="deleteProduct({{ $product->id }})" class="text-gray-700 hover:text-rose-500 font-black text-[9px] uppercase transition-all tracking-widest">Eliminar</button>
+                        @endcan
                     </div>
                 </div>
             @empty
