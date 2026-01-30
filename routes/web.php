@@ -35,4 +35,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/stats', [App\Http\Controllers\Admin\StatsController::class, 'index'])->name('admin.stats');
+});
+
+// Resto de rutas que usuarios normales ven
+Route::middleware(['auth', 'role:usuario|admin'])->group(function () {
+    Route::resource('productos', ProductController::class);
+});
+
 require __DIR__.'/auth.php';

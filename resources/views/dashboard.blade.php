@@ -34,6 +34,10 @@
                     <span class="text-yellow-400 font-black text-xs uppercase tracking-[0.3em]">Dashboard</span>
                     <h3 class="text-3xl font-black text-white uppercase tracking-tighter">Resumen <span class="text-gray-500 text-2xl italic">Estratégico</span></h3>
                 </div>
+
+                @role('admin')
+                    <a href="{{ route('admin.stats') }}" class="btn btn-primary">Ver Estadísticas</a>
+                @endrole
             </div>
 
             {{-- GRID PRINCIPAL --}}
